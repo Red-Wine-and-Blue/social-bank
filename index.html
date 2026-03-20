@@ -290,7 +290,13 @@
   }
 
   .suggestions { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.1rem; }
+  .suggestion-row {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+  }
   .suggestion-btn {
+    flex: 1;
     text-align: left;
     padding: 13px 16px;
     background: var(--cream);
@@ -305,6 +311,22 @@
   }
   .suggestion-btn:hover { border-color: var(--purple-mid); background: var(--purple-pale); }
   .suggestion-btn.selected { border-color: var(--purple-mid); background: var(--purple-pale); color: var(--purple-dark); }
+  .copy-btn {
+    flex-shrink: 0;
+    width: 44px;
+    padding: 0;
+    background: var(--cream);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, background 0.15s;
+    color: var(--text-muted);
+  }
+  .copy-btn:hover { border-color: var(--purple-mid); background: var(--purple-pale); color: var(--purple-mid); }
+  .copy-btn.copied { border-color: var(--success); background: #E1F5EE; color: var(--success); }
 
   .loading-row {
     display: flex;
@@ -582,16 +604,9 @@ function buildDeepLink(url, shortUrl) {
 }
 
 function tryDeepLink(deepUrl, e) {
-  // Try the native app deep link; browser href acts as fallback if app not installed
-  const start = Date.now();
-  const timeout = setTimeout(() => {
-    // If we're still here after 1.5s the app didn't open — do nothing, browser fallback link is visible
-  }, 1500);
-  try {
-    window.location = deepUrl;
-  } catch(err) {}
-  // Let the default href= open in browser as backup if deep link fails instantly
-  // We don't preventDefault so both paths are available
+  // On mobile, attempt the app deep link first
+  // If the app isn't installed the browser will fall through to the href
+  setTimeout(() => { window.location = deepUrl; }, 50);
 }
 
 
@@ -650,6 +665,7 @@ function renderStep() {
     ${linkHTML}
     ${aiHTML}
     <div class="btn-row">
+      ${currentStep > 0 ? `<button class="btn-secondary" onclick="prevStep()">← Back</button>` : ""}
       ${s.hasAI ? `<button class="btn-secondary" onclick="generateComments()">Refresh ideas</button>` : ""}
       <button class="btn-next" onclick="nextStep()">${isLast ? "Complete Social Bank ✓" : "Done — next step →"}</button>
     </div>
@@ -684,7 +700,12 @@ Example: ["This is so important for our community.", "I had no idea this was hap
     const clean = text.replace(/```json|```/g, "").trim();
     generatedComments = JSON.parse(clean);
     list.innerHTML = generatedComments.map((c, i) =>
-      `<button class="suggestion-btn" onclick="selectComment(${i}, this)">${c}</button>`
+      `<div class="suggestion-row">
+        <button class="suggestion-btn" onclick="selectComment(${i}, this)">${c}</button>
+        <button class="copy-btn" onclick="copyComment(${i}, this)" title="Copy to clipboard">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        </button>
+      </div>`
     ).join("");
   } catch (e) {
     list.innerHTML = `<p style="font-size:0.9rem;color:var(--text-muted);padding:8px 0;">Couldn't load suggestions — write your own below!</p>`;
@@ -696,6 +717,26 @@ function selectComment(i, el) {
   el.classList.add("selected");
   const input = document.getElementById("custom-comment");
   if (input) input.value = generatedComments[i];
+}
+
+function copyComment(i, btn) {
+  const text = generatedComments[i];
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add("copied");
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    setTimeout(() => {
+      btn.classList.remove("copied");
+      btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>`;
+    }, 2000);
+  });
+}
+
+function prevStep() {
+  if (currentStep > 0) {
+    currentStep--;
+    renderStep();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 }
 
 function nextStep() {
