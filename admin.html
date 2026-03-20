@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Social Bank — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --purple-dark: #2D2460;
+    --purple-mid: #534AB7;
+    --purple-light: #AFA9EC;
+    --purple-pale: #EEEDFE;
+    --cream: #FAF8F3;
+    --warm-white: #FFFFFF;
+    --text-primary: #1A1625;
+    --text-secondary: #5A5470;
+    --text-muted: #9B95B0;
+    --border: #E2DFF5;
+    --success: #1D9E75;
+    --success-pale: #E1F5EE;
+    --danger: #E24B4A;
+    --danger-pale: #FCEBEB;
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  html { font-size: 17px; }
+  body { font-family: var(--font-body); background: var(--cream); color: var(--text-primary); min-height: 100vh; }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(circle at 10% 15%, rgba(83,74,183,0.05) 0%, transparent 50%),
+      radial-gradient(circle at 90% 80%, rgba(175,169,236,0.07) 0%, transparent 50%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* LOGIN */
+  .login-wrap { position: relative; z-index: 1; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1.25rem; }
+  .login-card { background: var(--warm-white); border: 1px solid var(--border); border-radius: var(--radius); padding: 2.5rem 2rem; width: 100%; max-width: 400px; }
+  .login-card .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; }
+  .login-card .logo-mark { width: 38px; height: 38px; background: var(--purple-mid); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  .login-card .logo-mark svg { width: 20px; height: 20px; fill: white; }
+  .login-card .logo-text { font-family: var(--font-display); font-size: 1.1rem; color: var(--purple-dark); }
+  .login-card h2 { font-family: var(--font-display); font-size: 1.6rem; color: var(--purple-dark); margin-bottom: 0.4rem; letter-spacing: -0.02em; }
+  .login-card p { font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.75rem; }
+
+  /* APP SHELL */
+  .app-shell { display: none; position: relative; z-index: 1; }
+  .app-shell.visible { display: block; }
+  .topbar { background: var(--warm-white); border-bottom: 1px solid var(--border); padding: 0 1.5rem; height: 60px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar-left { display: flex; align-items: center; gap: 10px; }
+  .topbar-logo-mark { width: 32px; height: 32px; background: var(--purple-mid); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .topbar-logo-mark svg { width: 16px; height: 16px; fill: white; }
+  .topbar-title { font-family: var(--font-display); font-size: 1.05rem; color: var(--purple-dark); }
+  .topbar-badge { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; background: var(--purple-pale); color: var(--purple-mid); padding: 3px 8px; border-radius: 99px; }
+  .logout-btn { font-size: 0.82rem; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 6px 10px; border-radius: 6px; }
+  .logout-btn:hover { background: var(--cream); color: var(--text-secondary); }
+
+  .main { max-width: 860px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 2rem; background: var(--warm-white); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px; width: fit-content; }
+  .tab-btn { padding: 8px 18px; font-family: var(--font-body); font-size: 0.88rem; font-weight: 500; background: none; border: none; border-radius: 8px; cursor: pointer; color: var(--text-muted); transition: all 0.15s; }
+  .tab-btn.active { background: var(--purple-mid); color: white; }
+  .tab-btn:not(.active):hover { background: var(--purple-pale); color: var(--purple-mid); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* SHARED CARD */
+  .card { background: var(--warm-white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.75rem; margin-bottom: 1.25rem; }
+  .card-title { font-family: var(--font-display); font-size: 1.3rem; color: var(--purple-dark); letter-spacing: -0.02em; margin-bottom: 1.25rem; }
+
+  /* FORM */
+  .field { margin-bottom: 1.1rem; }
+  .field label { display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 7px; }
+  .field input, .field textarea, .field select {
+    width: 100%; font-family: var(--font-body); font-size: 0.95rem;
+    padding: 11px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--cream); color: var(--text-primary); outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s; -webkit-appearance: none;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--purple-mid); box-shadow: 0 0 0 3px rgba(83,74,183,0.1); }
+  .field input.error { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(226,75,74,0.1); }
+  .field-error { font-size: 0.78rem; color: #A32D2D; margin-top: 5px; display: none; }
+  .field-error.visible { display: block; }
+  .field textarea { resize: none; min-height: 80px; line-height: 1.5; }
+  .field-hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 5px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* BUTTONS */
+  .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; font-family: var(--font-body); font-size: 0.95rem; font-weight: 600; background: var(--purple-mid); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.15s, transform 0.1s; }
+  .btn-primary:hover { background: var(--purple-dark); }
+  .btn-primary:active { transform: scale(0.99); }
+  .btn-primary:disabled { background: var(--border); color: var(--text-muted); cursor: default; }
+  .btn-secondary { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; font-family: var(--font-body); font-size: 0.85rem; font-weight: 500; background: transparent; color: var(--purple-mid); border: 1.5px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s; }
+  .btn-secondary:hover { background: var(--purple-pale); border-color: var(--purple-light); }
+  .btn-danger { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; font-family: var(--font-body); font-size: 0.85rem; font-weight: 500; background: transparent; color: var(--danger); border: 1.5px solid #F7C1C1; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s; }
+  .btn-danger:hover { background: var(--danger-pale); }
+
+  /* SUCCESS TOAST */
+  .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--purple-dark); color: white; padding: 12px 22px; border-radius: 99px; font-size: 0.88rem; font-weight: 500; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); z-index: 100; white-space: nowrap; }
+  .toast.visible { transform: translateX(-50%) translateY(0); }
+
+  /* SHARE LINK BOX */
+  .share-box { background: var(--purple-pale); border: 1.5px solid var(--purple-light); border-radius: var(--radius-sm); padding: 14px 16px; margin-top: 1.25rem; display: none; }
+  .share-box.visible { display: block; }
+  .share-box-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--purple-mid); margin-bottom: 8px; }
+  .share-link-row { display: flex; gap: 8px; align-items: center; }
+  .share-link-text { flex: 1; font-size: 0.85rem; font-family: monospace; color: var(--purple-dark); background: white; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; word-break: break-all; }
+  .copy-link-btn { flex-shrink: 0; padding: 9px 14px; font-size: 0.82rem; font-weight: 600; background: var(--purple-mid); color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
+  .copy-link-btn:hover { background: var(--purple-dark); }
+
+  /* EVENTS LIST */
+  .events-empty { text-align: center; padding: 3rem 1rem; color: var(--text-muted); font-size: 0.9rem; }
+  .event-card { background: var(--warm-white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 1rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+  .event-card:hover { border-color: var(--purple-light); }
+  .event-info { flex: 1; min-width: 0; }
+  .event-topic { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .event-meta { font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .event-url { font-size: 0.78rem; color: var(--purple-mid); font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px; }
+  .event-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+  .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; font-size: 0.72rem; font-weight: 600; }
+  .status-badge.active { background: var(--success-pale); color: #0F6E56; }
+  .status-badge.past { background: var(--cream); color: var(--text-muted); border: 1px solid var(--border); }
+
+  /* LOADING */
+  .loading-row { display: flex; align-items: center; gap: 10px; padding: 2rem 0; color: var(--text-muted); font-size: 0.88rem; }
+  .dots { display: flex; gap: 5px; }
+  .dots span { width: 6px; height: 6px; background: var(--purple-light); border-radius: 50%; animation: bounce 1.2s infinite ease-in-out; }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+
+  /* SUPABASE CONFIG BANNER */
+  .config-banner { background: #FAEEDA; border: 1.5px solid #FAC775; border-radius: var(--radius-sm); padding: 14px 18px; margin-bottom: 1.5rem; font-size: 0.85rem; color: #633806; line-height: 1.6; }
+  .config-banner strong { font-weight: 600; }
+  .config-banner code { background: rgba(0,0,0,0.08); padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 0.82rem; }
+
+  @media (max-width: 500px) {
+    .field-row { grid-template-columns: 1fr; }
+    .event-card { flex-direction: column; }
+    .event-actions { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-wrap" id="login-screen">
+  <div class="login-card">
+    <div class="logo">
+      <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>
+      <span class="logo-text">Social Bank</span>
+    </div>
+    <h2>Admin login</h2>
+    <p>Enter your password to manage Social Bank events.</p>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="Enter admin password..." onkeydown="if(event.key==='Enter') doLogin()" />
+      <span class="field-error" id="login-error"></span>
+    </div>
+    <button class="btn-primary" style="width:100%;justify-content:center;" onclick="doLogin()">Sign in →</button>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div class="app-shell" id="app-shell">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>
+      <span class="topbar-title">Social Bank</span>
+      <span class="topbar-badge">Admin</span>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Sign out</button>
+  </div>
+
+  <div class="main">
+
+    <div class="config-banner" id="config-banner">
+      <strong>Setup needed:</strong> Replace the Supabase credentials in the script below with your own project URL and anon key. See <code>supabase-setup.md</code> for instructions. Once configured, this banner will disappear.
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('create')">Create event</button>
+      <button class="tab-btn" onclick="switchTab('events')">All events</button>
+    </div>
+
+    <!-- CREATE EVENT TAB -->
+    <div class="tab-panel active" id="tab-create">
+      <div class="card">
+        <div class="card-title">New Social Bank event</div>
+
+        <div class="field">
+          <label>Post link to amplify</label>
+          <input type="url" id="new-url" placeholder="https://instagram.com/p/..." oninput="clearErr('new-url')" />
+          <span class="field-error" id="new-url-err"></span>
+        </div>
+
+        <div class="field">
+          <label>What is this post about?</label>
+          <textarea id="new-topic" placeholder="e.g. Opposing HB 315 which targets the Ohio Haitian community — we need visibility before the vote on March 28..."></textarea>
+          <span class="field-error" id="new-topic-err"></span>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Event date</label>
+            <input type="date" id="new-date" />
+          </div>
+          <div class="field">
+            <label>Event name (optional)</label>
+            <input type="text" id="new-name" placeholder="e.g. March Social Bank" />
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:0.5rem;">
+          <button class="btn-primary" id="create-btn" onclick="createEvent()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Create event
+          </button>
+        </div>
+
+        <div class="share-box" id="share-box">
+          <div class="share-box-label">Member link — share this with your group</div>
+          <div class="share-link-row">
+            <div class="share-link-text" id="share-link-text"></div>
+            <button class="copy-link-btn" onclick="copyShareLink()">Copy link</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALL EVENTS TAB -->
+    <div class="tab-panel" id="tab-events">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+        <div style="font-size:0.85rem;color:var(--text-muted);" id="events-count"></div>
+        <button class="btn-secondary" onclick="loadEvents()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div id="events-list">
+        <div class="loading-row"><div class="dots"><span></span><span></span><span></span></div>Loading events…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── CONFIGURATION ─────────────────────────────────────────────────────────
+// Replace these with your Supabase project values from supabase-setup.md
+const SUPABASE_URL  = "YOUR_SUPABASE_URL";
+const SUPABASE_KEY  = "YOUR_SUPABASE_ANON_KEY";
+const ADMIN_PASSWORD = "socialbank2024"; // Change this to your own password
+const BASE_URL = window.location.origin + window.location.pathname.replace("admin.html", "");
+// ───────────────────────────────────────────────────────────────────────────
+
+const isConfigured = SUPABASE_URL !== "YOUR_SUPABASE_URL";
+
+async function sbFetch(path, options = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      "apikey": SUPABASE_KEY,
+      "Authorization": `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+      "Prefer": options.prefer || "return=representation",
+      ...(options.headers || {})
+    }
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Request failed");
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+// ─── AUTH ───────────────────────────────────────────────────────────────────
+function doLogin() {
+  const pw = document.getElementById("login-password").value;
+  const err = document.getElementById("login-error");
+  if (pw === ADMIN_PASSWORD) {
+    sessionStorage.setItem("sb_admin", "1");
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app-shell").classList.add("visible");
+    if (!isConfigured) document.getElementById("config-banner").style.display = "block";
+    else document.getElementById("config-banner").style.display = "none";
+    loadEvents();
+  } else {
+    err.textContent = "Incorrect password. Try again.";
+    err.classList.add("visible");
+    document.getElementById("login-password").classList.add("error");
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem("sb_admin");
+  document.getElementById("app-shell").classList.remove("visible");
+  document.getElementById("login-screen").style.display = "flex";
+  document.getElementById("login-password").value = "";
+}
+
+if (sessionStorage.getItem("sb_admin")) {
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("app-shell").classList.add("visible");
+  if (!isConfigured) document.getElementById("config-banner").style.display = "block";
+  else document.getElementById("config-banner").style.display = "none";
+  loadEvents();
+}
+
+// ─── TABS ───────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll(".tab-btn").forEach((b, i) => {
+    b.classList.toggle("active", ["create","events"][i] === name);
+  });
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  document.getElementById("tab-" + name).classList.add("active");
+  if (name === "events") loadEvents();
+}
+
+// ─── CREATE EVENT ────────────────────────────────────────────────────────────
+function clearErr(id) {
+  document.getElementById(id).classList.remove("error");
+  const e = document.getElementById(id + "-err");
+  if (e) e.classList.remove("visible");
+}
+
+function showFieldErr(id, msg) {
+  document.getElementById(id).classList.add("error");
+  const e = document.getElementById(id + "-err");
+  if (e) { e.textContent = msg; e.classList.add("visible"); }
+}
+
+function isValidUrl(s) {
+  try { const u = new URL(s); return u.protocol === "http:" || u.protocol === "https:"; }
+  catch(_) { return false; }
+}
+
+async function createEvent() {
+  const url   = document.getElementById("new-url").value.trim();
+  const topic = document.getElementById("new-topic").value.trim();
+  const date  = document.getElementById("new-date").value;
+  const name  = document.getElementById("new-name").value.trim();
+
+  let valid = true;
+  if (!url) { showFieldErr("new-url", "Please add the post link."); valid = false; }
+  else if (!isValidUrl(url)) { showFieldErr("new-url", "Must be a valid https:// link."); valid = false; }
+  if (!topic) { showFieldErr("new-topic", "Please describe what this post is about."); valid = false; }
+  if (!valid) return;
+
+  const btn = document.getElementById("create-btn");
+  btn.disabled = true;
+  btn.textContent = "Creating…";
+
+  if (!isConfigured) {
+    // Demo mode — generate a fake ID so the UI still works without Supabase
+    const fakeId = "demo-" + Math.random().toString(36).slice(2, 9);
+    showShareLink(fakeId);
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create event`;
+    showToast("Event created (demo mode — connect Supabase to save for real)");
+    return;
+  }
+
+  try {
+    const data = await sbFetch("events", {
+      method: "POST",
+      body: JSON.stringify({
+        post_url: url,
+        topic,
+        event_date: date || null,
+        event_name: name || null
+      })
+    });
+    const id = data[0]?.id;
+    showShareLink(id);
+    clearForm();
+    showToast("Event created! Share the link with your members.");
+  } catch(e) {
+    showToast("Error creating event: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create event`;
+  }
+}
+
+function showShareLink(id) {
+  const link = `${BASE_URL}index.html?event=${id}`;
+  document.getElementById("share-link-text").textContent = link;
+  document.getElementById("share-box").classList.add("visible");
+}
+
+function clearForm() {
+  ["new-url","new-topic","new-date","new-name"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+}
+
+let shareLinkCopied = false;
+function copyShareLink() {
+  const text = document.getElementById("share-link-text").textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector(".copy-link-btn");
+    btn.textContent = "Copied!";
+    setTimeout(() => btn.textContent = "Copy link", 2000);
+  });
+}
+
+// ─── LOAD EVENTS ─────────────────────────────────────────────────────────────
+async function loadEvents() {
+  const list = document.getElementById("events-list");
+  list.innerHTML = `<div class="loading-row"><div class="dots"><span></span><span></span><span></span></div>Loading events…</div>`;
+
+  if (!isConfigured) {
+    list.innerHTML = `<div class="events-empty">Connect Supabase to see your events here.<br>Follow the instructions in <strong>supabase-setup.md</strong>.</div>`;
+    document.getElementById("events-count").textContent = "";
+    return;
+  }
+
+  try {
+    const events = await sbFetch("events?order=created_at.desc&select=*");
+    document.getElementById("events-count").textContent = events.length + " event" + (events.length !== 1 ? "s" : "");
+    if (events.length === 0) {
+      list.innerHTML = `<div class="events-empty">No events yet. Create your first one!</div>`;
+      return;
+    }
+    list.innerHTML = events.map(e => renderEventCard(e)).join("");
+  } catch(err) {
+    list.innerHTML = `<div class="events-empty">Could not load events: ${err.message}</div>`;
+  }
+}
+
+function renderEventCard(e) {
+  const date = e.event_date ? new Date(e.event_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "No date set";
+  const isActive = !e.event_date || new Date(e.event_date) >= new Date(new Date().setHours(0,0,0,0));
+  const link = `${BASE_URL}index.html?event=${e.id}`;
+  const shortUrl = e.post_url.length > 50 ? e.post_url.slice(0, 50) + "…" : e.post_url;
+  return `
+    <div class="event-card">
+      <div class="event-info">
+        <div class="event-topic">${e.event_name || e.topic}</div>
+        <div class="event-meta">
+          <span>${date}</span>
+          <span class="status-badge ${isActive ? 'active' : 'past'}">${isActive ? 'Active' : 'Past'}</span>
+        </div>
+        <div class="event-url">${shortUrl}</div>
+      </div>
+      <div class="event-actions">
+        <button class="btn-secondary" onclick="copyEventLink('${link}', this)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copy link
+        </button>
+        <button class="btn-danger" onclick="deleteEvent('${e.id}', this)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          Delete
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function copyEventLink(link, btn) {
+  navigator.clipboard.writeText(link).then(() => {
+    btn.textContent = "Copied!";
+    setTimeout(() => {
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy link`;
+    }, 2000);
+  });
+}
+
+async function deleteEvent(id, btn) {
+  if (!confirm("Delete this event? This cannot be undone.")) return;
+  btn.disabled = true;
+  try {
+    await sbFetch(`events?id=eq.${id}`, { method: "DELETE", prefer: "return=minimal" });
+    showToast("Event deleted.");
+    loadEvents();
+  } catch(e) {
+    showToast("Error deleting event.");
+    btn.disabled = false;
+  }
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("visible");
+  setTimeout(() => t.classList.remove("visible"), 3000);
+}
+</script>
+</body>
+</html>
