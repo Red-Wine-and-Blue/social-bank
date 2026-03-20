@@ -218,7 +218,7 @@
         </div>
 
         <div style="display:flex;gap:10px;margin-top:0.5rem;">
-          <button class="btn-primary" id="create-btn" onclick="createEvent()">
+          <button class="btn-primary" id="create-btn" onclick="createBankEvent()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Create event
           </button>
@@ -343,7 +343,7 @@ function isValidUrl(s) {
   catch(_) { return false; }
 }
 
-async function createEvent() {
+async function createBankEvent() {
   const url   = document.getElementById("new-url").value.trim();
   const topic = document.getElementById("new-topic").value.trim();
   const date  = document.getElementById("new-date").value;
