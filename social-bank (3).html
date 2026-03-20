@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Social Bank — SCALE Method</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --purple-dark: #2D2460;
+    --purple-mid: #534AB7;
+    --purple-light: #AFA9EC;
+    --purple-pale: #EEEDFE;
+    --cream: #FAF8F3;
+    --warm-white: #FFFFFF;
+    --text-primary: #1A1625;
+    --text-secondary: #5A5470;
+    --text-muted: #9B95B0;
+    --border: #E2DFF5;
+    --success: #1D9E75;
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  html { font-size: 18px; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--cream);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* BACKGROUND PATTERN */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 15% 20%, rgba(83,74,183,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 85% 70%, rgba(175,169,236,0.08) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+  }
+
+  /* LOGO / HEADER */
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 2.5rem;
+  }
+  .logo-mark {
+    width: 40px;
+    height: 40px;
+    background: var(--purple-mid);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .logo-mark svg { width: 22px; height: 22px; fill: white; }
+  .logo-text {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    color: var(--purple-dark);
+    letter-spacing: -0.02em;
+  }
+
+  /* SCREENS */
+  .screen { display: none; animation: fadeUp 0.35s ease both; }
+  .screen.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SETUP SCREEN */
+  .setup-hero { margin-bottom: 2rem; }
+  .setup-hero h1 {
+    font-family: var(--font-display);
+    font-size: 2.4rem;
+    color: var(--purple-dark);
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.6rem;
+  }
+  .setup-hero h1 em { color: var(--purple-mid); font-style: italic; }
+  .setup-hero p { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.7; }
+
+  .card {
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .field { margin-bottom: 1.25rem; }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .field input, .field textarea {
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    padding: 13px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--cream);
+    color: var(--text-primary);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  .field input:focus, .field textarea:focus {
+    border-color: var(--purple-mid);
+    box-shadow: 0 0 0 3px rgba(83,74,183,0.12);
+  }
+  .field input.error {
+    border-color: #E24B4A;
+    box-shadow: 0 0 0 3px rgba(226,75,74,0.12);
+  }
+  .field-error {
+    font-size: 0.8rem;
+    color: #A32D2D;
+    margin-top: 6px;
+    display: none;
+  }
+  .field-error.visible { display: block; }
+  .field input::placeholder, .field textarea::placeholder { color: var(--text-muted); }
+  .field textarea { resize: none; min-height: 90px; line-height: 1.5; }
+
+  .btn-primary {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    font-weight: 600;
+    background: var(--purple-mid);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    letter-spacing: 0.01em;
+  }
+  .btn-primary:hover { background: var(--purple-dark); }
+  .btn-primary:active { transform: scale(0.99); }
+  .btn-primary:disabled { background: var(--border); color: var(--text-muted); cursor: default; }
+
+  .scale-preview {
+    display: flex;
+    gap: 8px;
+    margin-top: 1.75rem;
+  }
+  .scale-chip {
+    flex: 1;
+    text-align: center;
+    padding: 10px 4px;
+    background: var(--purple-pale);
+    border-radius: var(--radius-sm);
+  }
+  .scale-chip .letter {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--purple-mid);
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+  .scale-chip .word {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--purple-light);
+  }
+
+  /* BANK SCREEN */
+  .step-header { margin-bottom: 1.75rem; }
+
+  .progress-track {
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.6rem;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--purple-mid), var(--purple-light));
+    border-radius: 3px;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+  .progress-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .step-big-letter {
+    font-family: var(--font-display);
+    font-size: 5rem;
+    color: var(--purple-pale);
+    line-height: 0.9;
+    margin-bottom: -0.5rem;
+    user-select: none;
+  }
+  .step-title {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    color: var(--purple-dark);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.4rem;
+  }
+  .step-desc {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .post-link-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: var(--purple-pale);
+    border: 1.5px solid var(--purple-light);
+    border-radius: var(--radius-sm);
+    color: var(--purple-dark);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+    margin-bottom: 0.6rem;
+    transition: background 0.15s;
+    word-break: break-all;
+  }
+  .post-link-btn:hover { background: #E0DEFC; }
+  .post-link-btn svg { flex-shrink: 0; width: 18px; height: 18px; fill: var(--purple-mid); }
+
+  .platform-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.6rem;
+  }
+  .platform-badge.instagram { background: #fce4ec; color: #880e4f; }
+  .platform-badge.facebook  { background: #e3f2fd; color: #0d47a1; }
+  .platform-badge.web       { background: var(--purple-pale); color: var(--purple-dark); }
+
+  .browser-fallback {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+    padding: 0 2px;
+  }
+  .browser-fallback a {
+    color: var(--purple-mid);
+    text-decoration: underline;
+  }
+
+  /* AI COMMENTS */
+  .ai-block { border-top: 1px solid var(--border); padding-top: 1.25rem; margin-top: 0.5rem; }
+  .ai-block-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .suggestions { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.1rem; }
+  .suggestion-row {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .suggestion-btn {
+    flex: 1;
+    text-align: left;
+    padding: 13px 16px;
+    background: var(--cream);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    line-height: 1.5;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .suggestion-btn:hover { border-color: var(--purple-mid); background: var(--purple-pale); }
+  .suggestion-btn.selected { border-color: var(--purple-mid); background: var(--purple-pale); color: var(--purple-dark); }
+  .copy-btn {
+    flex-shrink: 0;
+    width: 44px;
+    padding: 0;
+    background: var(--cream);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, background 0.15s;
+    color: var(--text-muted);
+  }
+  .copy-btn:hover { border-color: var(--purple-mid); background: var(--purple-pale); color: var(--purple-mid); }
+  .copy-btn.copied { border-color: var(--success); background: #E1F5EE; color: var(--success); }
+
+  .loading-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+  .dots { display: flex; gap: 5px; }
+  .dots span {
+    width: 7px; height: 7px;
+    background: var(--purple-light);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite ease-in-out;
+  }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 1rem; }
+  .btn-secondary {
+    flex: 1;
+    padding: 14px;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 500;
+    background: transparent;
+    color: var(--purple-mid);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .btn-secondary:hover { background: var(--purple-pale); border-color: var(--purple-light); }
+  .btn-next {
+    flex: 2;
+    padding: 14px;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 600;
+    background: var(--purple-mid);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn-next:hover { background: var(--purple-dark); }
+  .btn-next:active { transform: scale(0.99); }
+
+  /* DONE SCREEN */
+  .done-wrap { text-align: center; padding: 1rem 0 2rem; }
+  .done-circle {
+    width: 90px; height: 90px;
+    margin: 0 auto 1.5rem;
+    background: var(--purple-pale);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .done-circle svg { width: 46px; height: 46px; fill: var(--purple-mid); }
+  .done-wrap h2 {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    color: var(--purple-dark);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.75rem;
+  }
+  .done-wrap p { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.75; margin-bottom: 2rem; }
+  .steps-summary {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  .done-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .done-chip .check {
+    width: 16px; height: 16px;
+    background: var(--success);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .done-chip .check svg { width: 9px; height: 9px; fill: white; }
+
+  /* RESPONSIVE */
+  @media (max-width: 420px) {
+    html { font-size: 16px; }
+    .setup-hero h1 { font-size: 2rem; }
+    .step-big-letter { font-size: 4rem; }
+  }
+
+  /* MEMBER NAME SCREEN */
+  .event-banner {
+    background: var(--purple-pale);
+    border: 1.5px solid var(--purple-light);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 1.25rem;
+  }
+  .event-banner-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--purple-mid); margin-bottom: 4px; }
+  .event-banner-topic { font-size: 0.92rem; color: var(--purple-dark); font-weight: 500; line-height: 1.5; }
+  .event-banner-date { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
+
+  /* LOADING SCREEN */
+  .loading-screen { text-align: center; padding: 4rem 1rem; }
+  .loading-screen p { color: var(--text-muted); font-size: 0.9rem; margin-top: 1rem; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- LOGO -->
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+    </div>
+    <span class="logo-text">Social Bank</span>
+  </div>
+
+  <!-- LOADING SCREEN -->
+  <div id="screen-loading" class="screen active">
+    <div class="loading-screen">
+      <div class="dots" style="justify-content:center;"><span></span><span></span><span></span></div>
+      <p>Loading your Social Bank…</p>
+    </div>
+  </div>
+
+  <!-- SETUP SCREEN (manual — shown when no ?event= in URL) -->
+  <div id="screen-setup" class="screen">
+    <div class="setup-hero">
+      <h1>Let's <em>amplify</em> what matters.</h1>
+      <p>Social Banking uses the SCALE method to boost important posts in the algorithm. Follow each step together — your community's voices add up.</p>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label>Post link to amplify</label>
+        <input type="url" id="post-url" placeholder="Paste the Instagram, Facebook, or X link..." oninput="clearUrlError()" />
+        <span class="field-error" id="url-error"></span>
+      </div>
+      <div class="field">
+        <label>What is this post about?</label>
+        <textarea id="post-topic" placeholder="e.g. Opposing HB 315 which targets the Ohio Haitian community — we need people to know about this vote..."></textarea>
+      </div>
+      <button class="btn-primary" onclick="startBank()">Start the Social Bank →</button>
+    </div>
+
+    <div class="scale-preview">
+      <div class="scale-chip"><span class="letter">S</span><span class="word">Share</span></div>
+      <div class="scale-chip"><span class="letter">C</span><span class="word">Comment</span></div>
+      <div class="scale-chip"><span class="letter">A</span><span class="word">Amplify</span></div>
+      <div class="scale-chip"><span class="letter">L</span><span class="word">Like</span></div>
+      <div class="scale-chip"><span class="letter">E</span><span class="word">Engage</span></div>
+    </div>
+  </div>
+
+  <!-- MEMBER NAME SCREEN (shown when loaded via ?event= link) -->
+  <div id="screen-name" class="screen">
+    <div class="setup-hero">
+      <h1>Welcome to the <em>Social Bank!</em></h1>
+      <p>Your organizer has set up today's event. Enter your name to get started.</p>
+    </div>
+    <div class="card">
+      <div id="event-banner" class="event-banner" style="display:none;">
+        <div class="event-banner-label">Today's post</div>
+        <div class="event-banner-topic" id="event-banner-topic"></div>
+        <div class="event-banner-date" id="event-banner-date"></div>
+      </div>
+      <div class="field">
+        <label>Your name</label>
+        <input type="text" id="member-name" placeholder="e.g. Maria, James, Auntie Pat..." oninput="clearNameError()" onkeydown="if(event.key==='Enter') joinBank()" />
+        <span class="field-error" id="name-error"></span>
+      </div>
+      <button class="btn-primary" onclick="joinBank()">Let's go →</button>
+    </div>
+    <div class="scale-preview">
+      <div class="scale-chip"><span class="letter">S</span><span class="word">Share</span></div>
+      <div class="scale-chip"><span class="letter">C</span><span class="word">Comment</span></div>
+      <div class="scale-chip"><span class="letter">A</span><span class="word">Amplify</span></div>
+      <div class="scale-chip"><span class="letter">L</span><span class="word">Like</span></div>
+      <div class="scale-chip"><span class="letter">E</span><span class="word">Engage</span></div>
+    </div>
+  </div>
+
+  <!-- BANK SCREEN -->
+  <div id="screen-bank" class="screen">
+    <div class="step-header">
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <div class="progress-label" id="progress-label">Step 1 of 5</div>
+    </div>
+
+    <div class="card" id="step-card">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+
+  <!-- DONE SCREEN -->
+  <div id="screen-done" class="screen">
+    <div class="done-wrap">
+      <div class="done-circle">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      </div>
+      <h2>You're a Social Banker!</h2>
+      <p>You completed all 5 SCALE steps. Every comment, share, and like shifts the algorithm and helps real people see this message. Thank you for showing up.</p>
+      <div class="steps-summary">
+        <div class="done-chip"><div class="check"><svg viewBox="0 0 10 8"><path d="M1 4l3 3 5-6"/></svg></div>Shared</div>
+        <div class="done-chip"><div class="check"><svg viewBox="0 0 10 8"><path d="M1 4l3 3 5-6"/></svg></div>Commented</div>
+        <div class="done-chip"><div class="check"><svg viewBox="0 0 10 8"><path d="M1 4l3 3 5-6"/></svg></div>Amplified</div>
+        <div class="done-chip"><div class="check"><svg viewBox="0 0 10 8"><path d="M1 4l3 3 5-6"/></svg></div>Liked</div>
+        <div class="done-chip"><div class="check"><svg viewBox="0 0 10 8"><path d="M1 4l3 3 5-6"/></svg></div>Engaged</div>
+      </div>
+      <button class="btn-primary" onclick="restart()">Run another Social Bank</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── CONFIGURATION ────────────────────────────────────────────────────────
+const SUPABASE_URL = "https://eljprvukjbcyrujaufrl.supabase.co";
+const SUPABASE_KEY = "sb_publishable_1vk5Ptyf8feYTZP_wOqGtA_FRs0fcdG";
+// ─────────────────────────────────────────────────────────────────────────
+
+const STEPS = [
+  { letter: "S", title: "Share the post", desc: "Post this on your story, OR send it as a direct message to at least 1 friend who would care about this. Every share puts it in front of new eyes.", hasAI: false },
+  { letter: "C", title: "Comment on the post", desc: "Leave a thoughtful comment — this is the single most powerful thing you can do. Your comment must be at least 5 words long. Use the AI suggestions below if you need a starting point.", hasAI: true },
+  { letter: "A", title: "Amplify 5 other comments", desc: "Find 5 other comments on the post. Like them, respond with an emoji, or add a short reply. This signals to the algorithm that the conversation is active.", hasAI: false },
+  { letter: "L", title: "Like and repost", desc: "Like the post, then repost or share it to your feed so your followers can see it too.", hasAI: false },
+  { letter: "E", title: "Engage fully", desc: "If the post has a video, watch it all the way to the end — this is a strong algorithm signal. Then double-check you've done all the steps above.", hasAI: false }
+];
+
+let currentStep = 0;
+let postUrl = "";
+let postTopic = "";
+let generatedComments = [];
+let eventId = null;
+let sessionId = null;
+let memberName = "";
+
+// ─── SUPABASE HELPER ──────────────────────────────────────────────────────
+async function sbFetch(path, options = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      "apikey": SUPABASE_KEY,
+      "Authorization": `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+      "Prefer": options.prefer || "return=representation",
+      ...(options.headers || {})
+    }
+  });
+  if (!res.ok) throw new Error("Supabase error");
+  return res.status === 204 ? null : res.json();
+}
+
+// ─── INIT: check for ?event= in URL ──────────────────────────────────────
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  eventId = params.get("event");
+
+  if (eventId) {
+    // Load event from Supabase
+    try {
+      const events = await sbFetch(`events?id=eq.${eventId}&select=*`);
+      if (!events || events.length === 0) {
+        showError("This Social Bank link is no longer active. Ask your organizer for a new one.");
+        return;
+      }
+      const event = events[0];
+      postUrl = event.post_url;
+      postTopic = event.topic;
+
+      // Show event details on name screen
+      document.getElementById("event-banner-topic").textContent = event.topic;
+      if (event.event_date) {
+        const d = new Date(event.event_date);
+        document.getElementById("event-banner-date").textContent = d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+      }
+      if (event.event_name) {
+        document.getElementById("event-banner-topic").textContent = event.event_name + " — " + event.topic;
+      }
+      document.getElementById("event-banner").style.display = "block";
+      showScreen("name");
+    } catch(e) {
+      // If Supabase fails, fall back to manual setup
+      showScreen("setup");
+    }
+  } else {
+    // No event ID — show manual setup screen
+    showScreen("setup");
+  }
+}
+
+// ─── MEMBER NAME FLOW ─────────────────────────────────────────────────────
+function clearNameError() {
+  document.getElementById("member-name").classList.remove("error");
+  document.getElementById("name-error").classList.remove("visible");
+}
+
+async function joinBank() {
+  memberName = document.getElementById("member-name").value.trim();
+  if (!memberName) {
+    document.getElementById("member-name").classList.add("error");
+    document.getElementById("name-error").textContent = "Please enter your name to continue.";
+    document.getElementById("name-error").classList.add("visible");
+    return;
+  }
+
+  // Create session in Supabase
+  try {
+    const data = await sbFetch("sessions", {
+      method: "POST",
+      body: JSON.stringify({
+        event_id: eventId,
+        member_name: memberName,
+        current_step: 0,
+        completed: false
+      })
+    });
+    sessionId = data[0]?.id;
+  } catch(e) {
+    // Continue even if session save fails — don't block the member
+    console.warn("Could not save session:", e);
+  }
+
+  currentStep = 0;
+  showScreen("bank");
+  renderStep();
+}
+
+// ─── MANUAL SETUP FLOW ────────────────────────────────────────────────────
+function isValidUrl(str) {
+  try { const u = new URL(str); return u.protocol === "http:" || u.protocol === "https:"; }
+  catch(_) { return false; }
+}
+
+function showUrlError(msg) {
+  document.getElementById("post-url").classList.add("error");
+  const err = document.getElementById("url-error");
+  err.textContent = msg; err.classList.add("visible");
+}
+
+function clearUrlError() {
+  document.getElementById("post-url").classList.remove("error");
+  document.getElementById("url-error").classList.remove("visible");
+}
+
+function startBank() {
+  postUrl = document.getElementById("post-url").value.trim();
+  postTopic = document.getElementById("post-topic").value.trim();
+  if (!postUrl) { showUrlError("Please paste a link before starting."); return; }
+  if (!isValidUrl(postUrl)) { showUrlError("That doesn't look like a valid link. Make sure it starts with https://"); return; }
+  clearUrlError();
+  currentStep = 0;
+  showScreen("bank");
+  renderStep();
+}
+
+// ─── SESSION TRACKING ─────────────────────────────────────────────────────
+async function saveProgress(step, completed) {
+  if (!sessionId) return;
+  try {
+    const update = { current_step: step };
+    if (completed) { update.completed = true; update.completed_at = new Date().toISOString(); }
+    await sbFetch(`sessions?id=eq.${sessionId}`, {
+      method: "PATCH",
+      prefer: "return=minimal",
+      body: JSON.stringify(update)
+    });
+  } catch(e) { console.warn("Could not update session:", e); }
+}
+
+// ─── SCREENS ──────────────────────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById("screen-" + name).classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function showError(msg) {
+  document.getElementById("screen-loading").innerHTML = `
+    <div class="loading-screen">
+      <p style="color:#A32D2D;">${msg}</p>
+    </div>`;
+}
+
+// ─── STEP RENDERING ───────────────────────────────────────────────────────
+function buildDeepLink(url, shortUrl) {
+  const isInstagram = /instagram\.com/i.test(url);
+  const isFacebook  = /facebook\.com|fb\.com|fb\.watch/i.test(url);
+
+  if (isInstagram) {
+    const deepLink = "instagram://media?id=" + encodeURIComponent(url);
+    return `
+      <div class="platform-badge instagram">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="#c13584"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        Instagram post
+      </div>
+      <a class="post-link-btn" href="${url}" target="_blank" rel="noopener" onclick="tryDeepLink('${deepLink}', event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Open in Instagram app
+      </a>
+      <p class="browser-fallback">Not working? <a href="${url}" target="_blank" rel="noopener">Open in browser instead</a></p>`;
+  }
+
+  if (isFacebook) {
+    const deepLink = "fb://facewebmodal/f?href=" + encodeURIComponent(url);
+    return `
+      <div class="platform-badge facebook">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        Facebook post
+      </div>
+      <a class="post-link-btn" href="${url}" target="_blank" rel="noopener" onclick="tryDeepLink('${deepLink}', event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Open in Facebook app
+      </a>
+      <p class="browser-fallback">Not working? <a href="${url}" target="_blank" rel="noopener">Open in browser instead</a></p>`;
+  }
+
+  return `
+    <div class="platform-badge web">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+      Web link
+    </div>
+    <a class="post-link-btn" href="${url}" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Open the post — ${shortUrl}
+    </a>`;
+}
+
+function tryDeepLink(deepUrl, e) {
+  setTimeout(() => { window.location = deepUrl; }, 50);
+}
+
+function renderStep() {
+  const s = STEPS[currentStep];
+  const pct = Math.round((currentStep / STEPS.length) * 100);
+  document.getElementById("progress-fill").style.width = pct + "%";
+  document.getElementById("progress-label").textContent = "Step " + (currentStep + 1) + " of 5 — " + s.title;
+
+  const shortUrl = postUrl.length > 48 ? postUrl.slice(0, 48) + "…" : postUrl;
+  const linkHTML = buildDeepLink(postUrl, shortUrl);
+
+  let aiHTML = "";
+  if (s.hasAI) {
+    aiHTML = `
+      <div class="ai-block">
+        <p class="ai-block-label">AI comment suggestions</p>
+        <div class="suggestions" id="suggestions-list">
+          <div class="loading-row"><div class="dots"><span></span><span></span><span></span></div>Generating ideas for you…</div>
+        </div>
+        <div class="field">
+          <label>Your comment</label>
+          <textarea id="custom-comment" placeholder="Type your own, or tap a suggestion above to use it…"></textarea>
+        </div>
+      </div>`;
+  }
+
+  const isLast = currentStep === STEPS.length - 1;
+  document.getElementById("step-card").innerHTML = `
+    <div class="step-big-letter">${s.letter}</div>
+    <div class="step-title">${s.title}</div>
+    <p class="step-desc">${s.desc}</p>
+    ${linkHTML}
+    ${aiHTML}
+    <div class="btn-row">
+      ${currentStep > 0 ? `<button class="btn-secondary" onclick="prevStep()">← Back</button>` : ""}
+      ${s.hasAI ? `<button class="btn-secondary" onclick="generateComments()">Refresh ideas</button>` : ""}
+      <button class="btn-next" onclick="nextStep()">${isLast ? "Complete Social Bank ✓" : "Done — next step →"}</button>
+    </div>`;
+
+  if (s.hasAI) generateComments();
+}
+
+async function generateComments() {
+  const list = document.getElementById("suggestions-list");
+  if (!list) return;
+  list.innerHTML = `<div class="loading-row"><div class="dots"><span></span><span></span><span></span></div>Generating ideas for you…</div>`;
+  const topic = postTopic || "this important community post";
+  const prompt = `Generate 3 short, genuine social media comments (8–18 words each) someone could leave on a post about: "${topic}".
+Make them supportive, authentic, and varied: one factual/informational, one personal/emotional, one call-to-action.
+Each must be at least 5 words. Respond ONLY with a raw JSON array of 3 strings. No explanation, no markdown.
+Example: ["This is so important for our community.", "I had no idea this was happening — sharing now.", "Everyone needs to see this — please share!"]`;
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 300, messages: [{ role: "user", content: prompt }] })
+    });
+    const data = await res.json();
+    const text = (data.content || []).map(i => i.text || "").join("");
+    generatedComments = JSON.parse(text.replace(/```json|```/g, "").trim());
+    list.innerHTML = generatedComments.map((c, i) =>
+      `<div class="suggestion-row">
+        <button class="suggestion-btn" onclick="selectComment(${i}, this)">${c}</button>
+        <button class="copy-btn" onclick="copyComment(${i}, this)" title="Copy to clipboard">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        </button>
+      </div>`).join("");
+  } catch(e) {
+    list.innerHTML = `<p style="font-size:0.9rem;color:var(--text-muted);padding:8px 0;">Couldn't load suggestions — write your own below!</p>`;
+  }
+}
+
+function selectComment(i, el) {
+  document.querySelectorAll(".suggestion-btn").forEach(b => b.classList.remove("selected"));
+  el.classList.add("selected");
+  const input = document.getElementById("custom-comment");
+  if (input) input.value = generatedComments[i];
+}
+
+function copyComment(i, btn) {
+  navigator.clipboard.writeText(generatedComments[i]).then(() => {
+    btn.classList.add("copied");
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    setTimeout(() => {
+      btn.classList.remove("copied");
+      btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>`;
+    }, 2000);
+  });
+}
+
+function prevStep() {
+  if (currentStep > 0) { currentStep--; renderStep(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+}
+
+async function nextStep() {
+  currentStep++;
+  if (currentStep >= STEPS.length) {
+    document.getElementById("progress-fill").style.width = "100%";
+    await saveProgress(STEPS.length, true);
+    showScreen("done");
+  } else {
+    await saveProgress(currentStep, false);
+    renderStep();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
+function restart() {
+  showScreen("setup");
+  document.getElementById("post-url").value = "";
+  document.getElementById("post-topic").value = "";
+  sessionId = null; eventId = null; memberName = "";
+}
+
+// ─── START ────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
